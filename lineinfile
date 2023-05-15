@@ -1,0 +1,77 @@
+#!/bin/bash
+
+USAGE_INSERTAFTER_ARGUMENT="-a|--insertafter <PATTERN>"
+USAGE_LINE_ARGUMENT="-l|--line <LINE>"
+USAGE="Usage: $0 \
+    [-h|--help] \
+    [-v|--verbose] \
+    $USAGE_INSERTAFTER_ARGUMENT \
+    $USAGE_LINE_ARGUMENT \
+    <file>"
+
+VERBOSE="no"
+ARGUMENT_ERROR="no"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -a|--insertafter)
+            export INSERTAFTER="$2"
+            shift 2
+            ;;
+        -l|--line)
+            export LINE="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            export VERBOSE="yes"
+            shift 1
+            ;;
+        -h|--help)
+            echo $USAGE
+            break
+            ;;
+        *)
+            if [[ "$1" =~ ^- ]]; then
+                echo "Error: Unknown parameter: $1"
+                ARGUMENT_ERROR="yes"
+            fi
+            break
+            ;;
+    esac
+done
+
+if [ -z "$INSERTAFTER" ]; then
+    echo "Missing argument: $USAGE_INSERTAFTER_ARGUMENT"
+    ARGUMENT_ERROR="yes"
+fi
+
+if [ -z "$LINE" ]; then
+    echo "Missing argument: $USAGE_LINE_ARGUMENT"
+    ARGUMENT_ERROR="yes"
+fi
+
+if [ "$#" -lt 1 ]; then
+    echo "Missing argument: <file>"
+    ARGUMENT_ERROR="yes"
+fi
+
+if [ "$ARGUMENT_ERROR" == "yes" ]; then
+    echo $USAGE
+    exit 1;
+fi
+
+FILE=$1
+
+SED=sed
+
+if ! grep -q "^$LINE$" "$FILE"; then
+  if grep -q "$INSERTAFTER" "$FILE"; then
+    $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
+  else
+    echo "not found in file: $INSERTAFTER"
+    exit 1
+  fi
+else
+  echo "Line already exists in file: $LINE"
+fi
+
+exit 0
