@@ -67,7 +67,7 @@ fi
 
 FILE=$1
 
-SED=sed
+SED=gsed
 
 LINEINFILE="no"
 if ! grep -q "^$LINE$" "$FILE"; then
@@ -77,8 +77,13 @@ if ! grep -q "^$LINE$" "$FILE"; then
     tail -r $FILE | $SED '0,/^.*'"$REGEXP"'.*$/s//'"$LINE"'/' | tail -r > $TEMP_FILE
     mv $TEMP_FILE $FILE
   else 
-    if [ -n "$INSERTAFTER" ] && grep -q "$INSERTAFTER" "$FILE"; then
-      $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
+    if [ -n "$INSERTAFTER" ]; then
+      if grep -q "$INSERTAFTER" "$FILE"; then
+        $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
+      else
+        if [ -n "$(tail -c 1 $FILE)" ]; then echo >> $FILE; fi
+        echo $LINE >>$FILE
+      fi
     fi
   fi
 else
