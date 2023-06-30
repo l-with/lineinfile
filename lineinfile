@@ -1,10 +1,12 @@
 #!/bin/bash
 
 USAGE_INSERTAFTER_ARGUMENT="-a|--insertafter <PATTERN>"
+USAGE_REGEXP_ARGUMENT="-r|--regexp <PATTERN>"
 USAGE_LINE_ARGUMENT="-l|--line <LINE>"
 USAGE="Usage: $0 \
     [-h|--help] \
     [-v|--verbose] \
+    $USAGE_REGEXP_ARGUMENT \
     $USAGE_INSERTAFTER_ARGUMENT \
     $USAGE_LINE_ARGUMENT \
     <file>"
@@ -15,6 +17,10 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -a|--insertafter)
             export INSERTAFTER="$2"
+            shift 2
+            ;;
+        -r|--regexp)
+            export REGEXP="$2"
             shift 2
             ;;
         -l|--line)
@@ -39,8 +45,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [ -z "$INSERTAFTER" ]; then
-    echo "Missing argument: $USAGE_INSERTAFTER_ARGUMENT"
+if [ -z "$INSERTAFTER$REGEXP" ]; then
+    echo "Missing argument: $USAGE_INSERTAFTER_ARGUMENT or $USAGE_REGEXP_ARGUMENT"
     ARGUMENT_ERROR="yes"
 fi
 
@@ -63,12 +69,17 @@ FILE=$1
 
 SED=sed
 
+LINEINFILE="no"
 if ! grep -q "^$LINE$" "$FILE"; then
-  if grep -q "$INSERTAFTER" "$FILE"; then
-    $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
-  else
-    echo "not found in file: $INSERTAFTER"
-    exit 1
+  if [ -n "$REGEXP" ] && grep -q "$REGEXP" "$FILE"; then
+    if [ -n "$(tail -c 1 $FILE)" ]; then echo >> $FILE; fi
+    TEMP_FILE=$(mktemp -t FILE.XXXX)
+    tail -r $FILE | $SED '0,/^.*'"$REGEXP"'.*$/s//'"$LINE"'/' | tail -r > $TEMP_FILE
+    mv $TEMP_FILE $FILE
+  else 
+    if [ -n "$INSERTAFTER" ] && grep -q "$INSERTAFTER" "$FILE"; then
+      $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
+    fi
   fi
 else
   echo "Line already exists in file: $LINE"
