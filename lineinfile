@@ -67,7 +67,7 @@ fi
 
 FILE=$1
 
-SED=gsed
+SED=sed
 
 LINEINFILE="no"
 if ! grep -q "^$LINE$" "$FILE"; then
