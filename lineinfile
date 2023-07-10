@@ -70,7 +70,7 @@ FILE=$1
 SED=sed
 
 LINEINFILE="no"
-if ! grep -q "^$LINE$" "$FILE"; then
+if ! grep -q -e "^$LINE$" "$FILE"; then
   if [ -n "$REGEXP" ] && grep -q "$REGEXP" "$FILE"; then
     if [ -n "$(tail -c 1 $FILE)" ]; then echo >> $FILE; fi
     TEMP_FILE=$(mktemp -t FILE.XXXX)
@@ -78,7 +78,7 @@ if ! grep -q "^$LINE$" "$FILE"; then
     mv $TEMP_FILE $FILE
   else 
     if [ -n "$INSERTAFTER" ]; then
-      if grep -q "$INSERTAFTER" "$FILE"; then
+      if grep -q -e "$INSERTAFTER" "$FILE"; then
         $SED -i "/$INSERTAFTER/a $LINE" "$FILE"
       else
         if [ -n "$(tail -c 1 $FILE)" ]; then echo >> $FILE; fi
