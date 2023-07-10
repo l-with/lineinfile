@@ -71,7 +71,7 @@ SED=sed
 
 LINEINFILE="no"
 if ! grep -q -e "^$LINE$" "$FILE"; then
-  if [ -n "$REGEXP" ] && grep -q "$REGEXP" "$FILE"; then
+  if [ -n "$REGEXP" ] && grep -q -e "$REGEXP" "$FILE"; then
     if [ -n "$(tail -c 1 $FILE)" ]; then echo >> $FILE; fi
     TEMP_FILE=$(mktemp -t FILE.XXXX)
     tail -r $FILE | $SED '0,/^.*'"$REGEXP"'.*$/s//'"$LINE"'/' | tail -r > $TEMP_FILE
